@@ -68,8 +68,10 @@ Rimuoviamo l’intera applicazione costituita dai servizi e precedentemente buil
 docker-compose down
 ```
 
-Quando si ha la necessità di controllare più servizi su più macchine, e magari scalarli su di esse, è necessario qualcosa di più, è necessario **Docker Swarm**. 
-#Docker Swarm
+Quando si ha la necessità di controllare più servizi su più macchine, e magari scalarli su di esse, è necessario qualcosa di più, è necessario **Docker Swarm**.
+
+# Docker Swarm
+
 E’ lo strumento di default per la *gestione di container in un cluster di nodi Docker*.
 Uno swarm (“sciame” in italiano) consiste in un insieme di nodi macchine che eseguono il Docker Engine che si comportano da manager, per la gestione del cluster stesso, e/o worker, che eseguono servizi.
 
@@ -110,5 +112,51 @@ Creating network wp_default
 Creating service wp_db
 Creating service wp_wordpress
 ```
+
+1. Il comando stack deploy vuole per forza il riferimento al file YAML e il nome dello stack da creare. Il nome è usato come prefisso per le risorse create: il servizio WordPress, il database e la network che li isola, in analogia a cosa accadeva per il nome della cartella in cui risiedeva il file *.yml* del precedente comando docker-compose.
+In un cluster swarm formati da più nodi, questa *network* sarebbe accessibile anche **cross-nodo** se i due container fossero su nodi diversi.
+
+2. *Le direttive build e restart sono state ignorate.* Questo significa che non posso eseguire le build delle immagini con swarm su tutto il cluster. **Swarm è un ambiente di runtime: qualcun altro deve essere responsabile di fornirgli le immagini già pronte.**
+
+La CLI ha restituito subito il controllo, significa che qualcuno sta facendo qualcosa (ricordate i task?) in background (magari su un altra macchina nel caso multi-nodo). L’interazione è quindi asincrona: come si fa a vedere cosa sta succedendo? Il comando ci dà una panoramica dello stato dei task di wp: abbiamo quindi un task per ogni istanza (per questo il numerino in fondo al nome) di container che implementa il servizio richiesto. 
+
+# Docker services
+
+In Docker Compose si parla di servizi: ci appaiono come container (e le sue repliche) gestite dal Docker Compose.
+In Swarm questo concetto è reso più forte ed assume un ruolo centrale, diventando di fatto l’unità di deployment.
+Quando infatti si deploya una applicazione, in realtà si chiede (al **master**) di creare un servizio, definito nel file YAML (immagine da usare, porte esposte, overlay di rete,...). Dalla richiesta si *schedulano* i task che istanziano i container nel cluster. E' possibile verificare lo stato dello stack con il comando:
+
+```dockerfile
+
+docker stack services wp
+ID                  NAME                MODE                REPLICAS            IMAGE                            PORTS
+bo6cdv2jwnqz        wp_db               replicated          1/1                 poc/mysql-for-wordpress:latest
+klsaic86xu39        wp_wordpress        replicated          1/1                 wordpress:latest                 *:8000->80/tcp
+```
+
+Notiamo che abbiamo 1/1 replica rispettivamente del database e di WordPress (corrispondenti ai task), nonché il binding della porta 80 di quest’ultimo sulla 8000 dell’host (nodo fisico). Adesso siamo in condizioni di poter scalare il container di WordPress a due repliche senza avere problemi:
+
+```dockerfile
+docker service scale wp_wordpress=2
+wp_wordpress scaled to 2
+overall progress: 2 out of 2 tasks
+1/2: running   [==================================================>]
+2/2: running   [==================================================>]
+verify: Service converged
+```
+ Come ha fatto questa volta a funzionare? Funziona perché **il binding della porta è fatto a livello di servizio e non a livello di container**
+ 
+Il servizio quindi rappresenta l’unità non solo *logica*, ma anche fisica, perché è lui responsabile di fare da punto di accesso e da bilanciatore alle funzionalità dei container che *proxa*. Vediamo quindi chi *implementa* questi servizi:
+ 
+ ```dockerfile
+docker ps
+CONTAINER ID        IMAGE                            COMMAND                  CREATED             STATUS              PORTS                 NAMES
+35b70e25a1f3        wordpress:latest                 "docker-entrypoint.s…"   2 minutes ago       Up 2 minutes        80/tcp                wp_wordpress.2.xhpc5jebprigkrhlf742f5272
+5aaa08bd0ff9        poc/mysql-for-wordpress:latest   "docker-entrypoint.s…"   22 minutes ago      Up 22 minutes       3306/tcp, 33060/tcp   wp_db.1.uvxb7yhbdu1v36lri90lp2zr8
+f0f07649a62e        wordpress:latest                 "docker-entrypoint.s…"   22 minutes ago      Up 22 minutes       80/tcp                wp_wordpress.1.tlobb6t4vnxogbpehwwrr6cyd
+```
+
+Con il classico docker ps possiamo vedere quali container stanno girando sul nodo in cui siamo connessi: vediamo infatti che la porta non viene esposta a livello di container; possiamo scalarlo tutte le volte che vogliamo: sarà responsabilità del servizio rendere raggiungibili tutti i container indipendentemente dal nodo in cui sono.
+Quest’ultima considerazione fa sorgere una domanda: in un contesto reale, è necessario riuscire a far arrivare il traffico da fuori fin dentro il cluster Swarm, per cui è molto probabile che ci sarà un bilanciatore davanti. Come si fa quindi a sapere su quale nodo è stato fatto il binding della porta 8000 in modo da poter raggiungere il punto di ingresso del nostro applicativo. La soluzione che adotta Swarm (ma non solo, anche Kubernetes si comporta così) è chiama *Routing Mesh*: **il binding della porta viene fatto su tutti i nodi del cluster, anche se fisicamente non sta girando un task in quel nodo.**
 
 
