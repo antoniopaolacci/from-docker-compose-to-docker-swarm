@@ -7,13 +7,13 @@ Iniziando ad utilizzare docker per l'esecuzione delle nostre applicazioni, abbia
 Compose è uno strumento per definire ed eseguire applicazioni Docker multi-container. Con Compose, è possibile definire un file YAML per configurare i servizi applicativi. Nel file YAML infatti, è possibile definire più container Docker sotto il cappello “services“, sia a partire da Dockerfile che da immagini già pronte.
 Docker Compose se non è nativamente disponibile quando si installa Docker Engine va installato autonomamente e automatizza certe operazioni del demone docker. Ha una propria command line interface (CLI) accessibile tramite il comando docker-compose che semplifica notevolmente la gestione di gruppo dei servizi e container definiti nel file .yml
 
-```javascript
+```python
 docker-compose up -d
 ```
 
 Dove con *-d* si evita di rimanere attaccati al system out dei container avviati. Il controllo della console ci viene restituito solo dopo queste operazioni.
 
-```javascript
+```python
 Creating network "wordpress-docker_default" with the default driver
 Creating volume "wordpress-docker_db_data" with default driver
 Building db
@@ -39,7 +39,7 @@ Vediamo cosa è accaduto:
 In questo caso, oltre al consueto prefisso wordpress-docker, notiamo un numero dopo che segue il nome del servizio: si tratta della prima istanza del servizio. La prima cosa che notiamo è che il nome della cartella che contiene il file YAML viene usata come **namespace** per la nomenclatura delle risorse create: questo approccio è interessante perché permette di rilanciare lo stesso stack di servizi da cartelle diverse senza creare conflitti.
 Tutte queste operazioni sono sincrone con la CLI: finché i container non saranno avviati, non potremo riprendere il controllo della console. La CLI di compose è interessante perché permette di controllare in gruppo i container:
 
-```javascript
+```python
 docker-compose ps
 
             Name                          Command               State          Ports
@@ -54,7 +54,7 @@ Abbiamo bisogno di altro? Quando compose inizia ad essere un limite?
 quando si ha bisogno che i servizi girino su più macchine, Compose non è in grado di controllare questa situazione. La rete che viene creata tra i servizi istanziati è una sottorete dello stesso nodo (detto host) sia esso una virtual machine o server fisico. Puro isolamento basato su *iptables* non esiste un concetto di “cluster di nodi”. Non possiamo quindi far girare WordPress su una macchina e il MySQL in un’altra gestiti da Compose, perché non si “vedrebbero” a livello di rete: i Compose delle due macchine non avrebbero niente in comune. L’unico modo per farli comunicare sarebbe esporre le porte sui rispettivi host (i nodi *fisici*, le macchine) e far dialogare i servizi tramite gli hostname o ip delle rispettive macchine, ma si perde tutta la dinamicità offerta da Docker. se si prova a scalare un servizio (ovviamente sullo stesso host perché non si può fare altrimenti) che ha il binding di una porta sull’host, lo scaling verrà impedito perché la porta è già occupata dalla prima istanza. 
 In realtà, ad esempio, tramite lo stack di librerie *Netflix OSS* si può a livello programmatico eseguire più di una istanza dello stesso servizio incrementando il numero di porta, parametro di ingresso del comando docker run, registrando i servizi su un discovery service (Eureka), effettuando load-balancing (Ribbon) e discovery tramite il *service-name* definito. Verrà assegnata un’istanza di un servizio, secondo algoritmo di scheduling, che eseguirà il lavoro.
 
-```javascript
+```python
 docker-compose up -d --scale wordpress=2  
 WARNING: The "wordpress" service specifies a port on the host. If multiple containers for this service are created on a single host, the port will clash.  
 Starting wordpress-docker_wordpress_1 ... done  
@@ -64,7 +64,7 @@ ERROR: for wordpress-docker_wordpress_2  Cannot start service wordpress: driver 
 
 Rimuoviamo l’intera applicazione costituita dai servizi e precedentemente buildata ed eseguita.
 
-```javascript
+```python
 docker-compose down
 ```
 
@@ -78,14 +78,15 @@ Uno swarm (“sciame” in italiano) consiste in un insieme di nodi macchine che
 2.	**task** e **servizi**: abbiamo visto che un nodo master assegna il compito (task appunto) di eseguire un certo servizio su un nodo del cluster (possibilmente worker), ovvero avviare una o più istanze di un container a partire da una immagine. Come vedremo successivamente il *task*, è un concetto abbastanza trasparente, ma fondamentale, nell’uso di Swarm, se non per il fatto che tutta l’interazione tra il nodo master e la CLI è asincrona: da qua si evince che c’è qualcuno che sta facendo qualcosa (task) dopo che abbiamo eseguito un comando.
 Swarm non è attivo di default, anche se è già disponibile nell’installazione di Docker (a differenza del Compose). Dobbiamo quindi solo decidere come attivarlo: per lo sviluppo, cioè sulla nostra macchina, possiamo fare un cluster di un nodo semplicemente digitando:
 
-```javascript
+```python
 docker swarm init
 Swarm initialized: current node (keiak51s53xowk57oq24bd5yi) is now a manager.
 ```
 
 L’output completo del comando dà anche istruzioni su come aggiungere altri nodi al cluster (sia master che worker).
+Tramite i comandi della CLI *docker swarm* e *docker node* è possibile gestire il cluster.
 
-```javascript
+```python
 docker swarm init
 Swarm initialized: current node (aj0oz066oahxnksl6ni08nytv) is now a manager.
 
@@ -96,8 +97,18 @@ To add a worker to this swarm, run the following command:
 To add a manager to this swarm, run 'docker swarm join-token manager' and follow the instructions.
 ```
 
+# Docker stacks
+
+Nel gergo Swarm, l’insieme dei servizi che possiamo deployare si chiama *stack*, cioè pila di servizi. La cosa scaltra di Swarm è che usa i file YAML di Docker Compose, quindi il passaggio a Swarm è molto semplice: basta riusare lo stesso identico file *.yml*
 
 
+```python
+docker stack deploy -c docker-compose.yml wp
+Ignoring unsupported options: build, restart
 
+Creating network wp_default
+Creating service wp_db
+Creating service wp_wordpress
+```
 
 
