@@ -160,6 +160,17 @@ Quest’ultima considerazione fa sorgere una domanda: in un contesto reale, è n
 
 ![image](https://github.com/antoniopaolacci/from-docker-compose-to-docker-swarm/blob/master/routing-mesh-swarm.png)
 
+Portare l'intero stack down della nostra applicazione:
+
+```dockerfile
+ docker stack rm stack-demo
+ ```
+Portare il nostro Docker Engine fuori dallo swarm, utilizzare:
+
+```dockerfile
+ docker swarm leave --force
+ ```
+
 # Update e Docker Registry
 
 Immaginiamo di dover aggiornare un’immagine del nostro applicativo: abbiamo bisogno di eseguire nuovamente la build dell’immagine.
@@ -178,3 +189,5 @@ verify: Service converged
 ```
 
 Controllando i task, ci accorgiamo che è terminato quello precedente e ne è stato avviato uno nuovo subito dopo (questo perché l'*update-order* è di default a **stop-first**, si può verificare con *docker service inspect --pretty wp_db*). A differenza del Docker Compose però, Swarm non sostituisce il vecchio container con quello nuovo all’aggiornamento del servizio, ma ne crea uno nuovo a fianco, seguendo la policy dell’ *update-order*. Per fare un vero e proprio rolling update senza downtime, è possibile specificare l’order-update a **start-first**: in un dato momento ci saranno così contemporaneamente sia il nuovo task che quello vecchio, prima di essere interrotto.
+
+
