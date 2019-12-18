@@ -159,4 +159,23 @@ f0f07649a62e        wordpress:latest                 "docker-entrypoint.s…"   
 Con il classico docker ps possiamo vedere quali container stanno girando sul nodo in cui siamo connessi: vediamo infatti che la porta non viene esposta a livello di container; possiamo scalarlo tutte le volte che vogliamo: sarà responsabilità del servizio rendere raggiungibili tutti i container indipendentemente dal nodo in cui sono.
 Quest’ultima considerazione fa sorgere una domanda: in un contesto reale, è necessario riuscire a far arrivare il traffico da fuori fin dentro il cluster Swarm, per cui è molto probabile che ci sarà un bilanciatore davanti. Come si fa quindi a sapere su quale nodo è stato fatto il binding della porta 8000 in modo da poter raggiungere il punto di ingresso del nostro applicativo. La soluzione che adotta Swarm (ma non solo, anche Kubernetes si comporta così) è chiama *Routing Mesh*: **il binding della porta viene fatto su tutti i nodi del cluster, anche se fisicamente non sta girando un task in quel nodo.**
 
+![image](https://github.com/antoniopaolacci/from-docker-compose-to-docker-swarm/blob/master/routing-mesh-swarm.png)
 
+# Update e Docker Registry
+
+Immaginiamo di dover aggiornare un’immagine del nostro applicativo: abbiamo bisogno di eseguire nuovamente la build dell’immagine.
+
+Su questo Docker Swarm non ci può aiutare: abbiamo infatti detto che è un ambiente di runtime, possibilmente multi-nodo.
+Per lavorare bene dovremmo avere un **Docker Registry** su cui deployare le nostre immagini (magari generate da tool di continuous integration come Jenkins) così che ogni task (inviato dallo swarm) potrà scaricarsi l’ultima versione.
+
+Dopo aver aggiornato l’immagine, aggiorniamo ora il servizio: questa volta andrà forzato:
+
+ ```dockerfile
+docker service update --force wp_db
+wp_db
+overall progress: 1 out of 1 tasks
+1/1: running   [==================================================>]
+verify: Service converged
+```
+
+Controllando i task, ci accorgiamo che è terminato quello precedente e ne è stato avviato uno nuovo subito dopo (questo perché l'*update-order* è di default a **stop-first**, si può verificare con *docker service inspect --pretty wp_db*). A differenza del Docker Compose però, Swarm non sostituisce il vecchio container con quello nuovo all’aggiornamento del servizio, ma ne crea uno nuovo a fianco, seguendo la policy dell’ *update-order*. Per fare un vero e proprio rolling update senza downtime, è possibile specificare l’order-update a **start-first**: in un dato momento ci saranno così contemporaneamente sia il nuovo task che quello vecchio, prima di essere interrotto.
