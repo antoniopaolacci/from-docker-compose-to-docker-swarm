@@ -82,7 +82,6 @@ Swarm non è attivo di default, anche se è già disponibile nell’installazion
 
 ```dockerfile
 docker swarm init
-Swarm initialized: current node (keiak51s53xowk57oq24bd5yi) is now a manager.
 ```
 
 L’output completo del comando dà anche istruzioni su come aggiungere altri nodi al cluster (sia master che worker).
