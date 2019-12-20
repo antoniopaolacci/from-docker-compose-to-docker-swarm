@@ -161,7 +161,7 @@ Quest’ultima considerazione fa sorgere una domanda: in un contesto reale, è n
 
 ![image](https://github.com/antoniopaolacci/from-docker-compose-to-docker-swarm/blob/master/routing-mesh-swarm.png)
 
-Possiamo anche verificare l'esito dei singoli task/service schedulati ed eseguiti dallo swarm:
+Possiamo anche verificare l'esito dei singoli task/service schedulati ed eseguiti dallo swarm (*Running*, *Failed*, *Shutdown*):
 
  ```dockerfile
 docker stack ps my-arch
