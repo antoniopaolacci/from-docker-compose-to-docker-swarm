@@ -161,6 +161,34 @@ Quest’ultima considerazione fa sorgere una domanda: in un contesto reale, è n
 
 ![image](https://github.com/antoniopaolacci/from-docker-compose-to-docker-swarm/blob/master/routing-mesh-swarm.png)
 
+Possiamo anche verificare l'esito dei singoli task/service schedulati ed eseguiti dallo swarm:
+
+ ```dockerfile
+docker stack ps my-arch
+ID                  NAME                                  IMAGE                                                 NODE                DESIRED STATE       CURRENT STATE               ERROR                        PORTS
+y778mda8sb30        my-arch_elasticsearch.1               docker.elastic.co/elasticsearch/elasticsearch:7.5.0   docker-desktop      Running             Running 6 seconds ago
+trobadi73dx6         \_ my-arch_elasticsearch.1           docker.elastic.co/elasticsearch/elasticsearch:7.5.0   docker-desktop      Shutdown            Failed 13 seconds ago       "task: non-zero exit (78)"
+wpwjlq3h6n1a         \_ my-arch_elasticsearch.1           docker.elastic.co/elasticsearch/elasticsearch:7.5.0   docker-desktop      Shutdown            Failed 31 seconds ago       "task: non-zero exit (78)"
+zr4y4f1chcs1         \_ my-arch_elasticsearch.1           docker.elastic.co/elasticsearch/elasticsearch:7.5.0   docker-desktop      Shutdown            Failed 51 seconds ago       "task: non-zero exit (78)"
+p5tb1h4un4m7        my-arch_mail-microservice.1           mail-microservice:latest                              docker-desktop      Running             Running 3 minutes ago
+hcjlot2gakpe        my-arch_microservice-decode-error.1   microservice-decode-error:latest                      docker-desktop      Running             Running 3 minutes ago
+rn5cx82ig8sz        my-arch_logstash.1                    docker.elastic.co/logstash/logstash:7.5.0             docker-desktop      Running             Running 3 minutes ago
+ahvftbli0lwt        my-arch_gestione-user-service.1       gestione-user-service:latest                          docker-desktop      Running             Running 3 minutes ago
+88skidf3m2rz        my-arch_kafka.1                       wurstmeister/kafka:2.12-2.1.0                         docker-desktop      Running             Running 3 minutes ago
+03zbonzgiuez        my-arch_eureka-server.1               eureka-server:latest                                  docker-desktop      Running             Running 3 minutes ago
+n50h2fhuncnv        my-arch_config-server.1               config-server:latest                                  docker-desktop      Running             Running 3 minutes ago
+ry19f0i4elzg        my-arch_jwt-auth-server.1             jwt-auth-server:latest                                docker-desktop      Running             Running 3 minutes ago
+stscjbz0x2z2        my-arch_zipkin-server.1               zipkin-server:latest                                  docker-desktop      Running             Running 3 minutes ago
+0f8vawqiz32z        my-arch_redis.1                       redis:latest                                          docker-desktop      Running             Running 3 minutes ago
+r3uamvrvapz6        my-arch_kibana.1                      docker.elastic.co/kibana/kibana:7.5.0                 docker-desktop      Running             Running 3 minutes ago
+7h1u7doic654        my-arch_base-microservice-one.1       base-microservice-one:latest                          docker-desktop      Running             Running 3 minutes ago
+eiec4yymnpra        my-arch_elasticsearch.1               docker.elastic.co/elasticsearch/elasticsearch:7.5.0   docker-desktop      Shutdown            Failed about a minute ago   "task: non-zero exit (78)"
+vez7znpae2da        my-arch_zuul-server.1                 zuul-server:latest                                    docker-desktop      Running             Running 3 minutes ago
+bxysmka2o4x6        my-arch_base-microservice-two.1       base-microservice-two:latest                          docker-desktop      Running             Running 3 minutes ago
+s9kfxietuydv        my-arch_zookeeper.1                   wurstmeister/zookeeper:3.4.6                          docker-desktop      Running             Running 3 minutes ago
+hyy7jq0uckyg        my-arch_mysql.1                       mysql:latest                                          docker-desktop      Running             Running 3 minutes ago
+```
+
 Portare l'intero stack down della nostra applicazione:
 
 ```dockerfile
