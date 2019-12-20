@@ -202,7 +202,7 @@ Portare il nostro Docker Engine fuori dallo swarm, utilizzare:
  
 # Docker Swarm View Log
 
-Per visualizzare errori o seguire il log di un service:
+Per visualizzare errori o collegarsi allo standard output (*tail*) del log di un service:
 
 ```dockerfile
  docker service logs --follow <stack-name>_<service-name>
