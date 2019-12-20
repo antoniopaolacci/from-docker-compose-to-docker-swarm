@@ -180,14 +180,14 @@ Per visualizzare errori o seguire il log di un service:
  docker service logs --follow <stack-name>_<service-name>
  ```
 
-# Update e Docker Registry
+# Update Service e Docker Registry
 
 Immaginiamo di dover aggiornare un’immagine del nostro applicativo: abbiamo bisogno di eseguire nuovamente la build dell’immagine.
 
 Su questo Docker Swarm non ci può aiutare: abbiamo infatti detto che è un ambiente di runtime, possibilmente multi-nodo.
 Per lavorare bene dovremmo avere un **Docker Registry** su cui deployare le nostre immagini (magari generate da tool di continuous integration come Jenkins) così che ogni task (inviato dallo swarm) potrà scaricarsi l’ultima versione.
 
-Dopo aver aggiornato l’immagine, aggiorniamo ora il servizio: questa volta andrà forzato:
+Dopo aver aggiornato l’immagine, aggiorniamo ora il servizio, forzandolo:
 
  ```dockerfile
 docker service update --force wp_db
@@ -199,4 +199,11 @@ verify: Service converged
 
 Controllando i task, ci accorgiamo che è terminato quello precedente e ne è stato avviato uno nuovo subito dopo (questo perché l'*update-order* è di default a **stop-first**, si può verificare con *docker service inspect --pretty wp_db*). A differenza del Docker Compose però, Swarm non sostituisce il vecchio container con quello nuovo all’aggiornamento del servizio, ma ne crea uno nuovo a fianco, seguendo la policy dell’ *update-order*. Per fare un vero e proprio rolling update senza downtime, è possibile specificare l’order-update a **start-first**: in un dato momento ci saranno così contemporaneamente sia il nuovo task che quello vecchio, prima di essere interrotto.
 
+Per eseguire container in modalità swarm, non dovremmo effettuare la build individualmente su ogni nodo dello swarm. Invece tu effettui il build dell'immagine una sola volta, tipicamente su un *continuous integration* server (CI), effettuare il push su un registry server (spesso in hosting locale, oppure puoi utilizzare *docker hub*), e specificare l'immagine dentro il file compose *.yml* con un parametro di specifica compose *image: * per ogni servizio definito.
+
+Il parametro di specifica compose "container_name: " non è supportato in quanto comprometterebbe la possibilità di ridimensionare o eseguire aggiornamenti (il nome di un contenitore deve essere univoco nel motore docker). Lascia che lo sciame denomini i contenitori e faccia riferimento alla tua app sulla rete docker in base al nome del servizio.
+
+Il parametro di specifica compose "depends_on: " non è supportato poiché i contenitori possono essere avviati su nodi diversi e il ripristino degli aggiornamenti / il ripristino degli errori potrebbe rimuovere alcuni contenitori che forniscono un servizio dopo l'avvio dell'app. Docker può ritentare l'app in errore fino all'avvio dell'altro servizio oppure, preferibilmente, configurare un punto di accesso che attende la disponibilità delle dipendenze con un tipo di ping per un minuto o due.
+
+Il parametro di specifica compose "deploy: " indica allo Swarm come distribuire e aggiornare il servizio, incluso quante repliche, vincoli su dove eseguire, limiti e requisiti di memoria e CPU e quanto velocemente aggiornare il servizio, definire una politica di riavvio, anche se quest'ultima si sconsiglia di farlo perché i docker engine riavviano i container in conflitto con le modalità di deploy dello swarm.
 
