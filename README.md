@@ -133,7 +133,8 @@ bo6cdv2jwnqz        wp_db               replicated          1/1                 
 klsaic86xu39        wp_wordpress        replicated          1/1                 wordpress:latest                 *:8000->80/tcp
 ```
 
-Notiamo che abbiamo 1/1 replica rispettivamente del database e di WordPress (corrispondenti ai task), nonché il binding della porta 80 di quest’ultimo sulla 8000 dell’host (nodo fisico). Adesso siamo in condizioni di poter scalare il container di WordPress a due repliche senza avere problemi:
+Notiamo che abbiamo 1/1 replica rispettivamente del database e di WordPress (corrispondenti ai task), nonché il binding della porta 80 di quest’ultimo sulla 8000 dell’host (nodo fisico), mentre il servizio database non è esposto sull'host.
+Adesso siamo in condizioni di poter scalare il container di WordPress a due repliche senza avere problemi:
 
 ```dockerfile
 docker service scale wp_wordpress=2
@@ -169,6 +170,14 @@ Portare il nostro Docker Engine fuori dallo swarm, utilizzare:
 
 ```dockerfile
  docker swarm leave --force
+ ```
+ 
+# Docker Swarm View Log
+
+Per visualizzare errori o seguire il log di un service:
+
+```dockerfile
+ docker service logs --follow <stack-name>_<service-name>
  ```
 
 # Update e Docker Registry
