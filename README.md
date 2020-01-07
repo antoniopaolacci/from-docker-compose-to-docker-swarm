@@ -117,7 +117,22 @@ In un cluster swarm formati da più nodi, questa *network* sarebbe accessibile a
 
 2. *Le direttive build e restart sono state ignorate.* Questo significa che non posso eseguire le build delle immagini con swarm su tutto il cluster. **Swarm è un ambiente di runtime: qualcun altro deve essere responsabile di fornirgli le immagini già pronte.**
 
-La CLI ha restituito subito il controllo, significa che qualcuno sta facendo qualcosa (ricordate i task?) in background (magari su un altra macchina nel caso multi-nodo). L’interazione è quindi asincrona: come si fa a vedere cosa sta succedendo? Il comando ci dà una panoramica dello stato dei task di wp: abbiamo quindi un task per ogni istanza (per questo il numerino in fondo al nome) di container che implementa il servizio richiesto. 
+La CLI ha restituito subito il controllo, significa che qualcuno sta facendo qualcosa (ricordate i task?) in background (magari su un altra macchina nel caso multi-nodo). L’interazione è quindi asincrona: come si fa a vedere cosa sta succedendo? 
+
+```dockerfile
+docker stack ls
+
+NAME                SERVICES            ORCHESTRATOR
+_stack_name_
+```
+
+Il comando docker stack ps dà una panoramica dello stato dei task di wp: abbiamo quindi un task per ogni istanza (per questo il numerino in fondo al nome) di container che implementa il servizio richiesto. 
+
+
+```dockerfile
+docker stack ps _stack_name_
+
+```
 
 # Docker services
 
