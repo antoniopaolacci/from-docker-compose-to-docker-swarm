@@ -123,14 +123,14 @@ La CLI ha restituito subito il controllo, significa che qualcuno sta facendo qua
 docker stack ls
 
 NAME                SERVICES            ORCHESTRATOR
-_stack_name_
+<stack-name>
 ```
 
 Il comando docker stack ps dà una panoramica dello stato dei task di wp: abbiamo quindi un task per ogni istanza (per questo il numerino in fondo al nome) di container che implementa il servizio richiesto. 
 
 
 ```dockerfile
-docker stack ps _stack_name_
+docker stack ps <stack-name>
 
 ```
 
@@ -164,7 +164,9 @@ verify: Service converged
 Il servizio quindi rappresenta l’unità non solo *logica*, ma anche fisica, perché è lui responsabile di fare da punto di accesso e da bilanciatore alle funzionalità dei container che *proxa*. Vediamo quindi chi *implementa* questi servizi:
  
  ```dockerfile
+ 
 docker ps
+
 CONTAINER ID        IMAGE                            COMMAND                  CREATED             STATUS              PORTS                 NAMES
 35b70e25a1f3        wordpress:latest                 "docker-entrypoint.s…"   2 minutes ago       Up 2 minutes        80/tcp                wp_wordpress.2.xhpc5jebprigkrhlf742f5272
 5aaa08bd0ff9        poc/mysql-for-wordpress:latest   "docker-entrypoint.s…"   22 minutes ago      Up 22 minutes       3306/tcp, 33060/tcp   wp_db.1.uvxb7yhbdu1v36lri90lp2zr8
@@ -179,7 +181,9 @@ Quest’ultima considerazione fa sorgere una domanda: in un contesto reale, è n
 Possiamo anche verificare l'esito dei singoli task/service schedulati ed eseguiti dallo swarm (*Running*, *Failed*, *Shutdown*):
 
  ```dockerfile
+ 
 docker stack ps my-arch
+
 ID                  NAME                                  IMAGE                                                 NODE                DESIRED STATE       CURRENT STATE               ERROR                        PORTS
 y778mda8sb30        my-arch_elasticsearch.1               docker.elastic.co/elasticsearch/elasticsearch:7.5.0   docker-desktop      Running             Running 6 seconds ago
 trobadi73dx6         \_ my-arch_elasticsearch.1           docker.elastic.co/elasticsearch/elasticsearch:7.5.0   docker-desktop      Shutdown            Failed 13 seconds ago       "task: non-zero exit (78)"
